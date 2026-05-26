@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.github.portswigger'
+version = '2.0.0'
+description = 'JSSniper - JavaScript Security Scanner for Burp Suite'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo1.maven.org/maven2'
+    }
+}
+
+dependencies {
+    // Burp Suite Montoya API
+    implementation 'org.burp.montoya:montoya-api:2024.8'
+    
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'org.slf4j:slf4j-simple:2.0.9'
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}
+
+jar {
+    archiveBaseName = 'jssniper'
+    archiveVersion = version
+    
+    manifest {
+        attributes(
+            'Manifest-Version': '1.0',
+            'Implementation-Title': 'JSSniper',
+            'Implementation-Version': version,
+            'Built-By': 'PortSwigger',
+            'Build-Timestamp': new Date().format('yyyy-MM-dd HH:mm:ss')
+        )
+    }
+    
+    // Include all dependencies
+    from {
+        configurations.runtimeClasspath.collect { 
+            it.isDirectory() ? it : zipTree(it) 
+        }
+    }
+    
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+application {
+    mainClass = 'burp.extension.BurpExtension'
+}
+
+task buildBApp {
+    dependsOn build
+    doLast {
+        println "JSSniper Burp Extension built successfully"
+        println "Output: ${buildDir}/libs/jssniper-${version}.jar"
+    }
+}
+
+build.finalizedBy buildBApp
+
+// Code quality tasks
+task checkCode {
+    dependsOn check
+    doLast {
+        println "Code quality checks completed"
+    }
+}
+
+// Documentation generation
+task generateDocs {
+    doLast {
+        println "Documentation generation placeholder"
+    }
+}
+
+// Clean build output
+clean {
+    delete buildDir
+}
