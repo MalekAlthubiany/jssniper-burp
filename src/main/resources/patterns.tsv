@@ -1,1 +1,87 @@
-
+# JSsniper patterns  —  category<TAB>name<TAB>regex
+# Compiled with MULTILINE only; add (?i) inline where case-insensitivity is wanted.
+# --- API keys & access tokens (specific, high-confidence formats) ---
+api_keys	aws_access_key	\b(?:AKIA|ASIA|AROA|AIDA|AGPA|ANPA|ANVA|AIPA)[A-Z0-9]{16}\b
+api_keys	aws_secret_key	(?i)aws_?secret_?access_?key["'\s]*[=:]["'\s]*([A-Za-z0-9/+]{40})
+api_keys	google_api_key	\bAIza[0-9A-Za-z\-_]{35}\b
+api_keys	google_oauth	\bya29\.[0-9A-Za-z\-_]{20,}\b
+api_keys	gcp_service_account	"type"\s*:\s*"service_account"
+api_keys	github_token	\bgh[pousr]_[A-Za-z0-9]{36,255}\b
+api_keys	github_fine_pat	\bgithub_pat_[A-Za-z0-9_]{82}\b
+api_keys	gitlab_pat	\bglpat-[A-Za-z0-9\-_]{20}\b
+api_keys	slack_token	\bxox[baprs]-[0-9A-Za-z-]{10,48}\b
+api_keys	slack_webhook	https://hooks\.slack\.com/services/[A-Za-z0-9/]+
+api_keys	stripe_secret	\b(?:sk|rk)_(?:live|test)_[0-9a-zA-Z]{16,}\b
+api_keys	stripe_public	\bpk_(?:live|test)_[0-9a-zA-Z]{16,}\b
+api_keys	twilio_sid	\bAC[a-z0-9]{32}\b
+api_keys	twilio_key	\bSK[a-z0-9]{32}\b
+api_keys	sendgrid	\bSG\.[A-Za-z0-9_\-]{22}\.[A-Za-z0-9_\-]{43}\b
+api_keys	mailgun	\bkey-[0-9a-zA-Z]{32}\b
+api_keys	mailchimp	\b[0-9a-f]{32}-us[0-9]{1,2}\b
+api_keys	npm_token	\bnpm_[A-Za-z0-9]{36}\b
+api_keys	square	\bsq0[a-z]{3}-[0-9A-Za-z\-_]{22,43}\b
+api_keys	openai	\bsk-(?:proj-)?[A-Za-z0-9_\-]{20,}T3BlbkFJ[A-Za-z0-9_\-]{20,}\b
+api_keys	algolia_admin	(?i)algolia[_-]?(?:admin)?[_-]?key["'\s]*[=:]["'\s]*([A-Za-z0-9]{32})
+api_keys	jwt	\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b
+api_keys	generic_api_key	(?i)(?:api[_-]?key|apikey|x-api-key|client[_-]?secret|access[_-]?token|auth[_-]?token)["'\s]*[=:]["'\s]*["']?([A-Za-z0-9_\-]{16,})["']?
+api_keys	bearer_token	(?i)bearer\s+([A-Za-z0-9_\-\.=]{20,})
+# --- Hardcoded credentials & secrets ---
+credentials	password_assign	(?i)(?:password|passwd|pwd|passphrase)["'\s]*[=:]["'\s]*["']([^"'\s]{4,})["']
+credentials	secret_assign	(?i)(?:secret|client_secret|private_token|access_key|secret_key)["'\s]*[=:]["'\s]*["']([^"'\s]{8,})["']
+credentials	basic_auth_url	https?://[A-Za-z0-9._%+\-]+:[^@\s"'/]{3,}@[A-Za-z0-9.\-]+
+credentials	db_connection	(?i)(?:mongodb(?:\+srv)?|postgres(?:ql)?|mysql|mariadb|redis|amqp|jdbc:[a-z0-9]+)://[^\s"'<>)]+
+credentials	private_key_block	-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY-----
+credentials	auth_header	(?i)authorization["'\s]*[=:]["'\s]*["'](?:Basic|Bearer)\s+[A-Za-z0-9_\-\.=+/]{10,}["']
+# --- PII (emails, phones, cards) ---
+pii	email	\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,24}\b
+pii	saudi_mobile	\b(?:(?:\+|00)?966|0)5[0-9]{8}\b
+pii	us_phone	\b(?:\+?1[ \-.])?\(?[2-9][0-9]{2}\)?[ \-.][0-9]{3}[ \-.][0-9]{4}\b
+pii	credit_card	\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b
+# --- Crypto material, hashes & crypto libraries ---
+crypto	md5_hash	\b[a-f0-9]{32}\b
+crypto	sha1_hash	\b[a-f0-9]{40}\b
+crypto	sha256_hash	\b[a-f0-9]{64}\b
+crypto	bcrypt_hash	\$2[aby]?\$[0-9]{1,2}\$[./A-Za-z0-9]{53}
+crypto	crypto_library	(?i)\b(?:CryptoJS|crypto-js|node-forge|forge\.pki|sjcl|jsencrypt|tweetnacl|bcryptjs|elliptic|asmcrypto|libsodium|stanford)\b
+crypto	weak_algorithm	(?i)\b(?:MD5|SHA-?1|DES|TripleDES|RC4|ECB)\b
+# --- Endpoints, paths & URLs ---
+endpoints	url	\bhttps?://[A-Za-z0-9.\-]+(?::[0-9]+)?(?:/[^\s"'<>)]*)?
+endpoints	websocket	\bwss?://[A-Za-z0-9.\-]+(?::[0-9]+)?(?:/[^\s"'<>)]*)?
+endpoints	fetch_call	fetch\(\s*["']([^"']+)["']
+endpoints	axios_call	axios\.(?:get|post|put|delete|patch|request)\(\s*["']([^"']+)["']
+endpoints	xhr_open	\.open\(\s*["'](?:GET|POST|PUT|DELETE|PATCH)["']\s*,\s*["']([^"']+)["']
+endpoints	jquery_ajax	\$\.(?:ajax|get|post|getJSON)\(\s*["']([^"']+)["']
+endpoints	api_path	["'](/(?:api|v[0-9]+|graphql|rest|rpc|oauth|auth|admin|internal|account|user)/[A-Za-z0-9_\-/{}.:]+)["']
+endpoints	backup_file	[A-Za-z0-9_\-./]+\.(?:bak|backup|old|swp|orig|save|sql|tar|gz|zip|env|config|ini)\b
+# --- Hosts & IPs ---
+hosts	ipv6	\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b
+hosts	internal_service	(?i)\b(?:localhost|127\.0\.0\.1):[0-9]{2,5}\b
+hosts	internal_domain	(?i)\b[a-z0-9\-]+\.(?:internal|local|corp|intranet|staging|lan)\b
+# --- Developer comments & suspicious code ---
+comments	todo_comment	(?i)(?://|/\*|<!--|#)\s*(?:TODO|FIXME|HACK|XXX|BUG|REVIEW|SECURITY|VULN|DEPRECATED|WARNING)\b[^\n*]{0,160}
+comments	secret_comment	(?i)(?://|/\*)[^\n]*(?:password|secret|api[_-]?key|token|backdoor|hardcoded|remove this|do not commit)[^\n]*
+comments	debug_flag	(?i)\b(?:debug|isDebug|devMode|test_mode|verbose)\s*[=:]\s*(?:true|1)\b
+comments	dangerous_sink	(?i)(?:\beval\s*\(|new\s+Function\s*\(|\.innerHTML\s*=|document\.write\s*\(|insertAdjacentHTML|dangerouslySetInnerHTML)
+# --- API endpoints with explicit HTTP methods (passive) ---
+endpoints	method_endpoint	(?i)["'](GET|POST|PUT|DELETE|PATCH)["']\s*,\s*["']((?:https?:)?/[^"']+)["']
+endpoints	url_method	(?i)["']((?:https?:)?/[A-Za-z0-9._~/\-]+)["']\s*,\s*["'](?:GET|POST|PUT|DELETE|PATCH)["']
+# --- Cloud storage / service URLs (passive) ---
+cloud	aws_s3_host	(?i)\b[a-z0-9.\-]+\.s3(?:[.-][a-z0-9\-]+)?\.amazonaws\.com\b
+cloud	aws_s3_path	(?i)\bs3(?:[.-][a-z0-9\-]+)?\.amazonaws\.com/[A-Za-z0-9._\-/]+
+cloud	aws_s3_proto	(?i)\bs3://[A-Za-z0-9._\-/]+
+cloud	aws_apigw	(?i)\b[a-z0-9\-]+\.execute-api\.[a-z0-9\-]+\.amazonaws\.com\b
+cloud	aws_elb	(?i)\b[a-z0-9.\-]+\.elb\.amazonaws\.com\b
+cloud	azure_storage	(?i)\b[a-z0-9]+\.(?:blob|file|queue|table)\.core\.windows\.net\b
+cloud	azure_web	(?i)\b[a-z0-9\-]+\.azurewebsites\.net\b
+cloud	azure_cloudapp	(?i)\b[a-z0-9\-]+\.cloudapp\.azure\.com\b
+cloud	gcp_storage_path	(?i)\bstorage\.googleapis\.com/[A-Za-z0-9._\-/]+
+cloud	gcp_storage_host	(?i)\b[a-z0-9._\-]+\.storage\.googleapis\.com\b
+cloud	gcp_appspot	(?i)\b[a-z0-9\-]+\.appspot\.com\b
+cloud	firebase_db	(?i)\b[a-z0-9\-]+\.firebaseio\.com\b
+cloud	firebase_app	(?i)\b[a-z0-9\-]+\.firebaseapp\.com\b
+cloud	firebase_storage	(?i)\bfirebasestorage\.googleapis\.com/[A-Za-z0-9._\-/%]+
+cloud	cloudfront	(?i)\b[a-z0-9]+\.cloudfront\.net\b
+cloud	digitalocean	(?i)\b[a-z0-9.\-]+\.(?:digitaloceanspaces\.com|ondigitalocean\.app)\b
+cloud	oracle	(?i)\b[a-z0-9.\-]+\.oraclecloud\.com\b
+cloud	alibaba_oss	(?i)\b[a-z0-9.\-]*oss[a-z0-9.\-]*\.aliyuncs\.com\b
+cloud	rack_dreamhost	(?i)\b[a-z0-9.\-]+\.(?:clouddrive\.com|raxcdn\.com|rackcdn\.com|objects(?:-[a-z0-9]+)?\.dreamhost\.com|dream\.io)\b
