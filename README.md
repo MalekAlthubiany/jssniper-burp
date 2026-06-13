@@ -13,7 +13,7 @@ Detection seeds are from the original CLI tool,
 
 ## A note on accuracy
 This is a recon helper built on regular expressions and heuristics. Like every
-tool of this kind (JS-Miner's own docs say the same), **it produces false
+tool of this kind , **it produces false
 positives and does not replace manual review.** It does not — and cannot — achieve
 "99% / zero false positives." What it does to keep precision high: Shannon-entropy
 filtering on generic secrets, Luhn validation on card numbers, placeholder
