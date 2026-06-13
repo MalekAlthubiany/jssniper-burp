@@ -1,117 +1,183 @@
-# JSsniper for Burp Suite
+<p align="center">
+  <img src="assets/banner.png" alt="JSsniper" width="100%">
+</p>
 
-A JavaScript & JSON security analyzer for Burp Suite, in the spirit of JS-Miner.
-It passively scans static files (JS / JSON / inline `<script>`) as you browse and
-adds right-click actions to **scan a whole host**, **scan a specific response**,
-and **dump static files**. Findings are raised as native Burp issues with Title,
-Description, Impact, Remediation and highlighted matches.
+<p align="center">
+  <b>Hunt secrets, endpoints, PII and vulnerable libraries hiding in JavaScript &amp; JSON — right inside Burp Suite.</b>
+</p>
 
-Detection seeds are from the original CLI tool,
-[JSsniper](https://github.com/MalekAlthubiany/JSsniper.py), heavily expanded.
+<p align="center">
+  <img src="https://img.shields.io/badge/Burp-Community%20%26%20Pro-ff6633?style=flat-square" alt="Burp">
+  <img src="https://img.shields.io/badge/API-Montoya-ff6633?style=flat-square" alt="Montoya">
+  <img src="https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk&logoColor=white" alt="Java 21">
+  <img src="https://img.shields.io/badge/build-Gradle-02303A?style=flat-square&logo=gradle&logoColor=white" alt="Gradle">
+  <img src="https://img.shields.io/badge/status-active-2d74b5?style=flat-square" alt="status">
+</p>
 
-> For authorized security testing only.
+---
 
-## A note on accuracy
-This is a recon helper built on regular expressions and heuristics. Like every
-tool of this kind , **it produces false
-positives and does not replace manual review.** It does not — and cannot — achieve
-"99% / zero false positives." What it does to keep precision high: Shannon-entropy
-filtering on generic secrets, Luhn validation on card numbers, placeholder
-stop-lists, version comparison for libraries, and **live NPM verification** for
-dependency confusion (only unclaimed packages are flagged). Treat every result as
-a lead to verify.
+## Overview
 
-## Features
+**JSsniper** analyzes the *static files* of a web application — JavaScript, JSON and inline `<script>` blocks — to surface interesting and sensitive information during the recon phase of a security assessment.
 
-Passive (automatic + on right-click):
-- **Secrets / credentials** — AWS, Google, Stripe, GitHub, GitLab, Slack, Twilio,
-  SendGrid, NPM, OpenAI, JWTs, generic keys (entropy-gated), DB strings, private keys
-- **PII** — emails, Saudi (+966) & US phone numbers, payment cards (Luhn-checked)
-- **Crypto** — MD5/SHA-1/SHA-256/bcrypt hashes, crypto libraries, weak algorithms
-- **API endpoints** — GET/POST/PUT/DELETE/PATCH via fetch/axios/XHR/jQuery + paths
-- **Hosts & IPs** — IPv4/IPv6, private ranges, internal hostnames
-- **Subdomains (passive)** — subdomains of the target's registrable domain
-- **Cloud URLs (passive)** — AWS (S3/API GW/ELB), Azure, Google/Firebase, CloudFront,
-  DigitalOcean, Oracle, Alibaba, Rackspace, DreamHost
-- **Vulnerable JS libraries** — version-based (jQuery, AngularJS, Bootstrap, Lodash,
-  Moment, Handlebars, Axios, …)
-- **Source maps (passive)** — detects inline base64 maps and external `.map` references
-- **Developer comments & dangerous sinks** — TODO/SECURITY, eval/innerHTML (off by default)
+As you browse a target through Burp, or on demand by right-clicking a host, JSsniper inspects every static response in the site map and reports **exposed secrets, credentials, PII, endpoints, hosts/IPs, cloud resources, vulnerable libraries, source maps and potential dependency-confusion issues** — each as a clear, severity-rated finding with the matched bytes highlighted in the response.
 
-Active (right-click only — sends HTTP requests through Burp):
-- **JS Source Mapper** — fetches/guesses `.map` files and reports how many original
-  sources are recoverable
-- **Dependency confusion** — extracts referenced NPM packages and queries the public
-  NPM registry; an **unclaimed** package/scope is flagged High (404 = takeable name)
-- **Static files dumper** — one click to save all static files for a host to disk
+Everything is presented in a dedicated, **colour-coded JSsniper tab**, so it works fully in **Burp Suite Community Edition** (no scanner or Issues panel required) as well as Professional.
 
+> 🎯 JSsniper is a **recon helper**. Like every tool of this kind it can produce false positives and is meant to be followed by manual review — so it leans hard on precision (entropy scoring, Luhn checks, IP classification, version-context filtering, de-duplication) to keep the signal high.
 
-## Where results appear (important for Community Edition)
+<p align="center">
+  <img src="assets/screenshot-results.png" alt="JSsniper Results tab" width="100%">
+</p>
 
-JSsniper shows findings in its **own colour-coded Results tab** — it does **not**
-rely on Burp's scanner or the Target > Issues panel, so it works in **Burp Suite
-Community Edition** (which has no scanner UI).
+---
 
-1. Browse/crawl your target so its static files are in the site map.
-2. Open the **JSsniper** tab > **Results** and click **Scan entire site map**
-   (or right-click a host in the site map > **JSsniper: Scan the host**).
-3. Findings appear in the table, colour-coded by severity (red = High, orange =
-   Medium, yellow = Low, blue = Information). Click a row to see the full
-   Description / Impact / Remediation below.
+## Table of contents
 
-In Burp **Professional**, findings additionally appear under **Target > Issues**
-and passive scanning runs automatically as you browse.
+- [Key features](#key-features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Why the results stay clean](#why-the-results-stay-clean)
+- [Build from source](#build-from-source)
+- [Project structure](#project-structure)
+- [Credits &amp; license](#credits--license)
+
+---
+
+## Key features
+
+| | Feature | What it finds |
+|---|---|---|
+|  | **Secrets &amp; tokens** | AWS, Google, Stripe, GitHub/GitLab, Slack, Twilio, SendGrid, NPM, OpenAI keys, JWTs — generic matches gated by **Shannon entropy** |
+|  | **Hardcoded credentials** | passwords, DB connection strings, basic-auth URLs, private keys |
+|  | **PII** | emails, Saudi (+966) &amp; US phone numbers, payment cards (**Luhn-validated**) |
+|  | **Endpoints &amp; paths** | `GET/POST/PUT/DELETE/PATCH` via `fetch`/`axios`/`XHR`/jQuery, API routes, backup files |
+|  | **Hosts &amp; IPs** | IPv4/IPv6 with aggressive FP filtering, labelled **public / private / CGNAT / link-local** |
+|  | **Subdomains** | subdomains of the target's own registrable domain |
+|  | **Cloud URLs** | AWS, Azure, Google/Firebase, CloudFront, DigitalOcean, Oracle, Alibaba, Rackspace, DreamHost |
+|  | **Vulnerable libraries** | version-based checks (jQuery, AngularJS, Bootstrap, Lodash, Moment, Handlebars, Axios …) |
+|  | **Dependency confusion** | extracts referenced NPM packages and verifies them against the public NPM registry |
+|  | **JS source mapper** | detects inline base64 maps + fetches/guesses external `.map` files |
+|  | **Static file dumper** | one click to save a host's static files to disk |
+|  | **Colour-coded UI** | severity table, live counts, filters, advisory + **request/response with matched bytes highlighted** |
+
+---
+
+## Installation
+
+1. Grab `jssniper-1.0.0.jar` (from [Releases](../../releases) or build it — see below).
+2. In Burp: **Extensions → Installed → Add**.
+3. Extension type **Java** → select the jar → **Next**.
+4. You'll see `JSsniper loaded …` in the output and a **JSsniper** tab in the menu bar.
+
+> Works on Burp **Community** and **Professional**. No external dependencies — Burp provides the Montoya API at runtime.
+
+---
 
 ## Usage
 
-Right-click a host (or any of its requests) in Target / Proxy history:
-- **JSsniper: Scan the host** — runs the full passive engine over every static
-  response for that host **plus** the active checks (source maps + dependency
-  confusion). Issues appear under **Target → Issues**; progress logs in the
-  extension Output.
-- **JSsniper: Scan specific response** — same analysis on just the selected items.
-- **JSsniper: Dump static files** — writes the host's static files to a temp folder
-  (path is logged) so you can run your own tooling over them.
+**1. Capture the target's static files.** Browse the target through Burp's proxy so its JS/JSON files land in **Target → Site map**. JSsniper analyses what's already captured, so navigate the app first.
 
-Passive scanning also runs automatically as you browse. The **JSsniper** suite tab
-toggles categories and the inline-HTML / in-scope options.
+**2. Scan** — pick one:
 
-> Tip: browse/crawl the target first so its static files are in Burp's site map —
-> the host scan and dumper read from the site map.
+| Action | How |
+|---|---|
+|  Whole site map | **JSsniper → Results → Scan entire site map** |
+|  One host | right-click a host → **JSsniper: Scan the host** |
+|  Specific responses | select items → right-click → **JSsniper: Scan specific response** |
+|  Dump static files | right-click a host → **JSsniper: Dump static files** |
 
+**3. Review.** Findings appear in the **Results** table, colour-coded by severity. Click any row to open the detail pane with three tabs:
 
-### Viewing a finding (request, response & highlight)
-Click a row in the Results table to open the detail pane below, which has three tabs:
-- **Advisory** — issue name, severity, description, impact and remediation.
-- **Request** — the originating HTTP request (Burp's native editor).
-- **Response** — the HTTP response, with the matched/vulnerable bytes highlighted
-  via Burp's search highlighter.
-The header shows live severity counts (High / Medium / Low / Info) and a text
-filter, so the view stays readable on large targets.
+- **Advisory** — description, impact and remediation
+- **Request** — the originating HTTP request
+- **Response** — the response, with the matched/vulnerable bytes **highlighted**
 
-## Build & load
+Use the **Severity** dropdown and **Search** box to filter; the header shows live High / Medium / Low / Info counts.
 
-JDK 21. `gradle build` → `build/libs/jssniper-1.0.0.jar` (Montoya is `compileOnly`,
-no bundled deps). Load via Extensions → Installed → Add → type **Java**.
+>  The **dependency-confusion** and **active source-map** checks send HTTP requests (to the NPM registry and candidate `.map` URLs). Only run them against targets you're authorized to test.
 
-## Submitting to the BApp Store
+---
 
-Push to a public GitHub repo, then on
-[`PortSwigger/extension-portal`](https://github.com/PortSwigger/extension-portal)
-open Issues → **New extension submission**. It meets the structural criteria
-(Montoya via Gradle, no bundled deps, passive check makes no requests, active work
-+ NPM/dump on background threads via Burp's HTTP stack, clean unload handler, GUI
-tab parented to Burp). Before submitting: confirm it isn't a duplicate of an
-existing BApp (notably **JS-Miner**, whose feature set this overlaps), credit
-original author **Malek Althubiany**, and agree licensing before publishing.
+## Configuration
 
-## Credits
-- Original tool & seed patterns: **Malek Althubiany** — https://github.com/MalekAlthubiany/jssniper-burp
-- Feature set inspired by JS-Miner. Burp/Montoya implementation: this project.
+Open the **JSsniper → Settings** tab to:
 
-## Precision notes (IP addresses)
-IPv4 detection is heavily filtered to avoid the usual false positives:
-- word/dot boundaries so version strings like `v1.2.3.4` and longer dotted numbers are skipped;
-- version context before (`version: 1.2.3.4`) and version suffixes after (`1.2.3.4-beta`) are dropped;
-- strictly-sequential quads (`2.3.4.5`), `0.x`, multicast/reserved (>=224), loopback, netmasks, broadcast and RFC-5737 documentation ranges are discarded;
-- surviving IPs are labelled **public / private / CGNAT / link-local** so results are immediately useful.
+- enable/disable any detection category (e.g. silence the noisier *Comments* category),
+- toggle **scan inline `<script>` blocks in HTML**,
+- toggle **only scan in-scope items**.
+
+Detection data lives in editable resource files, so you can extend the rules without touching code:
+
+- `src/main/resources/patterns.tsv` — regex detections (`category` ⇥ `name` ⇥ `regex`)
+- `src/main/resources/libraries.tsv` — vulnerable-library rules (`name` ⇥ `versionRegex` ⇥ `safeVersion` ⇥ `advisory`)
+
+---
+
+## Why the results stay clean
+
+JSsniper spends most of its effort *not* reporting junk:
+
+- **IP addresses** — word/dot boundaries skip version strings (`v1.2.3.4`); version context (`version: 1.2.3.4`) and version suffixes (`1.2.3.4-beta`) are dropped; strictly-sequential quads (`2.3.4.5`), `0.x`, multicast/reserved, loopback, netmasks, broadcast and documentation ranges are discarded; survivors are labelled **public / private / CGNAT / link-local**.
+- **Secrets** — generic key/secret matches must clear a **Shannon-entropy** bar; obvious placeholders (`password`, `changeme`, …) are ignored.
+- **PII** — card numbers must pass the **Luhn** checksum; `icon@2x.png`-style asset refs are rejected as emails.
+- **Libraries** — only versions **below a known-safe release** are flagged.
+- **Dependency confusion** — package names are **verified live** against the NPM registry, so only genuinely unclaimed names are reported.
+- **Everywhere** — per-response de-duplication and bounded patterns keep output tidy and fast.
+
+It's still heuristic — treat findings as leads, not proof.
+
+---
+
+## Build from source
+
+Requires **JDK 21**.
+
+```bash
+gradle build
+# → build/libs/jssniper-1.0.0.jar
+```
+
+No Gradle installed? Open the folder in IntelliJ IDEA (it builds to `build/libs/`), or run `gradle wrapper` once and use `./gradlew build`.
+
+---
+
+## Project structure
+
+```
+jssniper-burp/
+├── build.gradle              # Java 21, compileOnly montoya-api
+├── settings.gradle
+├── assets/                   # logo, banner, screenshots
+└── src/main/
+    ├── java/com/jssniper/
+    │   ├── JSsniperExtension.java   # entry point
+    │   ├── JsScanCheck.java         # passive engine + precision filters
+    │   ├── ScanRunner.java          # host / site-map / selection scans
+    │   ├── ActiveAnalyzer.java      # source maps + NPM dependency confusion
+    │   ├── JsContextMenu.java       # right-click actions
+    │   ├── ResultsStore.java        # findings model
+    │   ├── PatternStore.java        # loads patterns.tsv
+    │   ├── LibraryCheck.java        # loads libraries.tsv + version compare
+    │   ├── SourceMapParser.java     # inline/base64 source maps
+    │   ├── DependencyParser.java    # NPM package extraction
+    │   ├── Entropy.java             # Shannon entropy
+    │   ├── Category.java            # titles / severity / impact / remediation
+    │   ├── ScanConfig.java          # runtime config
+    │   └── ui/{ResultsTab,ConfigTab}.java
+    └── resources/{patterns.tsv,libraries.tsv}
+```
+
+---
+
+## Credits &amp; license
+
+- Original tool &amp; seed detection patterns: **Malek Althubiany** — https://github.com/MalekAlthubiany/JSsniper.py
+- Burp / Montoya extension, expanded detection, precision engine and UI: this project.
+
+> Add a `LICENSE` file before publishing publicly, agreed with the original author.
+
+---
+
+<p align="center"><sub> For authorized security testing only. You are responsible for how you use this tool.</sub></p>
