@@ -1,4 +1,4 @@
-# JSsniper for Burp Suite (Montoya)
+# JSsniper for Burp Suite
 
 A JavaScript & JSON security analyzer for Burp Suite, in the spirit of JS-Miner.
 It passively scans static files (JS / JSON / inline `<script>`) as you browse and
