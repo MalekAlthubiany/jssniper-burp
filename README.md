@@ -106,7 +106,7 @@ existing BApp (notably **JS-Miner**, whose feature set this overlaps), credit
 original author **Malek Althubiany**, and agree licensing before publishing.
 
 ## Credits
-- Original tool & seed patterns: **Malek Althubiany** — https://github.com/MalekAlthubiany/JSsniper.py
+- Original tool & seed patterns: **Malek Althubiany** — https://github.com/MalekAlthubiany/jssniper-burp
 - Feature set inspired by JS-Miner. Burp/Montoya implementation: this project.
 
 ## Precision notes (IP addresses)
