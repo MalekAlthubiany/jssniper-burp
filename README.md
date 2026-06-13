@@ -24,7 +24,7 @@ As you browse a target through Burp, or on demand by right-clicking a host, JSsn
 
 Everything is presented in a dedicated, **colour-coded JSsniper tab**, so it works fully in **Burp Suite Community Edition** (no scanner or Issues panel required) as well as Professional.
 
-> 🎯 JSsniper is a **recon helper**. Like every tool of this kind it can produce false positives and is meant to be followed by manual review — so it leans hard on precision (entropy scoring, Luhn checks, IP classification, version-context filtering, de-duplication) to keep the signal high.
+>  JSsniper is a **recon helper**. Like every tool of this kind it can produce false positives and is meant to be followed by manual review — so it leans hard on precision (entropy scoring, Luhn checks, IP classification, version-context filtering, de-duplication) to keep the signal high.
 
 <p align="center">
   <img src="assets/screenshot-results.png" alt="JSsniper Results tab" width="100%">
